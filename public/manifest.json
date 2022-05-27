@@ -14,6 +14,13 @@
   },
   "permissions": ["Hotkeys", "GameInfo"],
   "data": {
+    "hotkeys": {
+      "in_game_show_hide": {
+        "title": "Show/Hide In-Game Window",
+        "action-type": "toggle",
+        "default": "Ctrl+F"
+      }
+    },
     "game_targeting": {
       "type": "dedicated",
       "game_ids": [7152, 13258]

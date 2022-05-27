@@ -1,15 +1,15 @@
 <script lang="ts">
-  import type { OWWindow } from "@overwolf/overwolf-api-ts";
   import { WINDOW_NAMES } from "app/consts";
   import { currentWindow } from "../stores/currentWindow";
+  import type { OWWindow } from "@overwolf/overwolf-api-ts";
 
-  export let activeWindow: OWWindow;
+  export let activeWindow: OWWindow | undefined;
   export let hotkeyText: string = "";
   let header: HTMLHeadElement;
   let windowMaximized: boolean = false;
 
   function windowMinMax() {
-    !windowMaximized ? activeWindow.maximize() : activeWindow.restore();
+    !windowMaximized ? activeWindow?.maximize() : activeWindow?.restore();
     windowMaximized = !windowMaximized;
   }
 </script>
@@ -17,13 +17,13 @@
 <header
   class="app-header"
   bind:this={header}
-  on:pointermove={() => activeWindow.dragMove(header)}
+  on:pointermove={() => activeWindow?.dragMove(header)}
 >
   <div>
     <img src="/img/header_icon.svg" alt="overwolf icon" />
     <h1 class="app-header-text">Overwolf Svelte Sample App</h1>
   </div>
-  {#if $currentWindow === WINDOW_NAMES.desktop}
+  {#if $currentWindow?.name === WINDOW_NAMES.inGame}
     <span class="app-header-text">Hotkey: {hotkeyText}</span>
   {/if}
   <div class="window-controls-group">
@@ -38,7 +38,7 @@
     />
     <button
       class="window-control window-control-minimize"
-      on:click={() => activeWindow.minimize()}
+      on:click={() => activeWindow?.minimize()}
     />
     {#if !windowMaximized}
       <button
@@ -53,7 +53,7 @@
     {/if}
     <button
       class="window-control window-control-close"
-      on:click={() => activeWindow.close()}
+      on:click={() => activeWindow?.close()}
     />
   </div>
 </header>

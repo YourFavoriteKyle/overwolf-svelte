@@ -1,27 +1,44 @@
-<script context="module" lang="ts">
-  import { OWHotkeys } from "@overwolf/overwolf-api-ts";
+<script lang="ts">
+  import { OWHotkeys, OWGames, OWWindow } from "@overwolf/overwolf-api-ts";
   import { defaultHotkey } from "app/consts";
-  import { onMount } from "svelte";
-  import { supportedGameRunningInfo } from "stores/supportedRunningGameInfo";
-  import type { OWWindow } from "@overwolf/overwolf-api-ts";
   import { Header } from "components";
+  import { currentWindow } from "../../stores/currentWindow";
+  import { onMount } from "svelte";
+  import { get } from "svelte/store";
 
-  export let activeWindow: OWWindow;
+  let hotkeyText: string;
+  let currentGameId: number;
 
-  // onMount(async () => {
-  //   return;
-  // });
+  onMount(async () => {
+    currentGameId = (await OWGames.getRunningGameInfo()).classId;
+    hotkeyText = await OWHotkeys.getHotkeyText(
+      defaultHotkey.toggle,
+      currentGameId
+    );
+  });
 
-  async function getHotkeyText() {
-    // FIXME: This call should be taking the game instance classId
-    // clearly it's not required but would require replacing activeWindow with
-    // currentWindow to be able to effectively access the OWWindow instance
-    return await OWHotkeys.getHotkeyText(defaultHotkey.toggle);
+  OWHotkeys.onHotkeyDown(defaultHotkey.toggle, () =>
+    windowStateCheck(get(currentWindow)?.instance)
+  );
+
+  async function windowStateCheck(windowInstance?: OWWindow) {
+    const windowState = await windowInstance?.getWindowState();
+    if (
+      windowState?.window_state_ex === "normal" ||
+      windowState?.window_state_ex === "maximized"
+    ) {
+      windowInstance?.minimize();
+      return;
+    }
+    if (
+      windowState?.window_state_ex === "minimized" ||
+      windowState?.window_state_ex === "closed"
+    ) {
+      windowInstance?.restore();
+      return;
+    }
   }
 </script>
 
-<script lang="ts">
-</script>
-
-<Header {activeWindow} />
+<Header activeWindow={$currentWindow?.instance} {hotkeyText} />
 <div>Welcome to the InGame screen</div>

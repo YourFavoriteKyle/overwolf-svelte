@@ -1,64 +1,103 @@
 <script lang="ts">
-  import { WINDOW_NAMES } from "../../app/consts";
-  import { OWWindow, OWGameListener } from "@overwolf/overwolf-api-ts";
+  import { WINDOW_NAMES, Games, defaultHotkey } from "../../app/consts";
+  import {
+    OWWindow,
+    OWGameListener,
+    OWGames,
+    OWHotkeys,
+  } from "@overwolf/overwolf-api-ts";
   import InGame from "../inGame/InGame.svelte";
   import Desktop from "../desktop/Desktop.svelte";
   import { currentWindow } from "../../stores/currentWindow";
-  import { supportedGameRunningInfo } from "../../stores/supportedRunningGameInfo";
+  import { runningGameInfo } from "../../stores/runningGameInfo";
   import { onMount } from "svelte";
-  import { Header } from "components";
 
-  // TODO: Utilizing beforeUpdate() and afterUpdate() might be able to alleviate
-  // some of the apparent timing issues with stores attempting to read
-  // store data before they are finished initializing... FUCK async
-
-  onMount(() => {
+  onMount(async () => {
     const gameListener = new OWGameListener({
-      onGameStarted: supportedGameRunningInfo.checkAndSet,
-      onGameEnded: supportedGameRunningInfo.checkAndSet,
+      onGameStarted: checkState,
+      onGameEnded: checkState,
     });
+
+    const gameRunning = await OWGames.getRunningGameInfo();
+
+    await checkState(gameRunning);
 
     gameListener.start();
-
-    // FIXME: WHY DOES THIS WORK HERE BUT NOT IN A DERIVED STORE???
-    supportedGameRunningInfo.subscribe((gameInfo) =>
-      currentWindow.setCurrentWindow(gameInfo)
-    );
-    currentWindow.subscribe((windowInfo) => {
-      if (!(typeof windowInfo === "undefined")) {
-        toggleWindows(windowInfo);
-      }
-    });
   });
 
   const desktopWindow = new OWWindow(WINDOW_NAMES.desktop);
   const inGameWindow = new OWWindow(WINDOW_NAMES.inGame);
 
-  // TODO: This var needs to be replaced with currentWindow as
-  // currentWindow should store an OWWindow instance
-  let activeWindow: OWWindow;
+  async function checkState(gameInfo?: overwolf.games.RunningGameInfo) {
+    const desktopState = await desktopWindow.getWindowState();
+    const inGameState = await inGameWindow.getWindowState();
 
-  function toggleWindows(info: string) {
-    if (info === WINDOW_NAMES.inGame) {
-      activeWindow = inGameWindow;
-      desktopWindow.close();
-      inGameWindow.restore();
+    if (gameInfo) {
+      runningGameInfo.set(gameInfo);
     }
-    if (info === WINDOW_NAMES.desktop) {
-      activeWindow = desktopWindow;
-      inGameWindow.close();
-      desktopWindow.restore();
+    if (!(gameInfo && gameInfo.isRunning && Games.includes(gameInfo.classId))) {
+      toggleWindows(false);
+    } else {
+      toggleWindows(true);
+    }
+
+    function toggleWindows(supportedGameRunning: boolean) {
+      if (!supportedGameRunning) {
+        currentWindow.set({
+          name: WINDOW_NAMES.desktop,
+          instance: desktopWindow,
+        });
+        if (!(inGameState.window_state_ex === "hidden")) {
+          inGameWindow.close();
+        }
+        if (desktopState.window_state_ex === "closed") {
+          desktopWindow.restore();
+        }
+        return;
+      }
+
+      if (supportedGameRunning) {
+        currentWindow.set({
+          name: WINDOW_NAMES.inGame,
+          instance: inGameWindow,
+        });
+        if (!(desktopState.window_state_ex === "closed")) {
+          desktopWindow.close();
+        }
+        if (inGameState.window_state_ex === "hidden") {
+          inGameWindow.restore();
+        }
+        return;
+      }
+    }
+  }
+
+  OWHotkeys.onHotkeyDown(defaultHotkey.toggle, () =>
+    windowStateCheck(inGameWindow)
+  );
+
+  async function windowStateCheck(windowInstance: OWWindow) {
+    const windowState = await windowInstance?.getWindowState();
+    console.log(windowState);
+    if (
+      windowState?.window_state_ex === "normal" ||
+      windowState?.window_state_ex === "maximized"
+    ) {
+      windowInstance?.minimize();
+      return;
+    }
+    if (
+      windowState?.window_state_ex === "minimized" ||
+      windowState?.window_state_ex === "closed"
+    ) {
+      windowInstance?.restore();
+      return;
     }
   }
 </script>
 
-{#if $currentWindow === WINDOW_NAMES.desktop}
-  <Header {activeWindow} />
+{#if $currentWindow?.name === WINDOW_NAMES.desktop}
   <Desktop />
-{:else if $currentWindow === WINDOW_NAMES.inGame}
-  <!--
-  FIXME: This issue can be resolved if activeWindow
-  is replaced with the currentWindow store
- -->
-  <InGame {activeWindow} />
+{:else if $currentWindow?.name === WINDOW_NAMES.inGame}
+  <InGame />
 {/if}
