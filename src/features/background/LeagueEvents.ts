@@ -1,7 +1,8 @@
 import { OWGamesEvents } from "@overwolf/overwolf-api-ts";
 import { REQUIRED_FEATURES } from "../../app/consts";
 
-import { writable, Writable } from "svelte/store";
+import { writable } from "svelte/store";
+import type { Writable } from "svelte/store";
 
 export const gameInfo = (() => {
   const { set, update, subscribe }: Writable<any[]> = writable([]);

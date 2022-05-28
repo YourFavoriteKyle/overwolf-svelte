@@ -4,7 +4,8 @@
   import { Header } from "components";
   import { currentWindow } from "../../stores/currentWindow";
   import { onMount, afterUpdate, beforeUpdate } from "svelte";
-  import { get, writable, Writable } from "svelte/store";
+  import { get, writable } from "svelte/store";
+  import type { Writable } from "svelte/store";
 
   import { gameInfo, gameEvents } from "../background/LeagueEvents";
 
