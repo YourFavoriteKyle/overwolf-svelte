@@ -10,7 +10,8 @@
   import Desktop from "../desktop/Desktop.svelte";
   import { currentWindow } from "../../stores/currentWindow";
   import { runningGameInfo } from "../../stores/runningGameInfo";
-  import { onMount } from "svelte";
+  import { gameEventsListener } from "./LeagueEvents";
+  import { onMount, onDestroy } from "svelte";
 
   onMount(async () => {
     const gameListener = new OWGameListener({
@@ -37,8 +38,10 @@
     }
     if (!(gameInfo && gameInfo.isRunning && Games.includes(gameInfo.classId))) {
       toggleWindows(false);
+      gameEventsListener.stop();
     } else {
       toggleWindows(true);
+      gameEventsListener.start();
     }
 
     function toggleWindows(supportedGameRunning: boolean) {
@@ -73,12 +76,11 @@
   }
 
   OWHotkeys.onHotkeyDown(defaultHotkey.toggle, () =>
-    windowStateCheck(inGameWindow)
+    toggleInGameWindow(inGameWindow)
   );
 
-  async function windowStateCheck(windowInstance: OWWindow) {
+  async function toggleInGameWindow(windowInstance: OWWindow) {
     const windowState = await windowInstance?.getWindowState();
-    console.log(windowState);
     if (
       windowState?.window_state_ex === "normal" ||
       windowState?.window_state_ex === "maximized"
@@ -94,6 +96,10 @@
       return;
     }
   }
+
+  onDestroy(() => {
+    gameEventsListener.stop();
+  });
 </script>
 
 {#if $currentWindow?.name === WINDOW_NAMES.desktop}

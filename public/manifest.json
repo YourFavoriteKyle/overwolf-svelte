@@ -3,14 +3,15 @@
   "type": "WebApp",
   "meta": {
     "name": "Overwolf Modern Svelte",
-    "version": "3.0.0",
-    "minimum-overwolf-version": "0.120.0",
+    "version": "1.0.0",
+    "minimum-overwolf-version": "0.160.0",
     "author": "Overwolf",
     "icon": "icons/IconMouseOver.png",
     "icon_gray": "icons/IconMouseNormal.png",
     "launcher_icon": "icons/desktop-icon.ico",
     "window_icon": "icons/TaskbarIcon.png",
-    "description": "Lorem Ipsum is simply dummy text of the printing and typesetting industry."
+    "description": "An example Overwolf app using Svelte.",
+    "deck_button_title": "Overwolf-Svelte"
   },
   "permissions": ["Hotkeys", "GameInfo"],
   "data": {
@@ -23,18 +24,18 @@
     },
     "game_targeting": {
       "type": "dedicated",
-      "game_ids": [7152, 13258]
+      "game_ids": [5426]
     },
     "launch_events": [
       {
         "event": "GameLaunch",
         "event_data": {
-          "game_ids": [7152, 13258]
+          "game_ids": [5426]
         },
         "start_minimized": true
       }
     ],
-    "game_events": [7152, 13258],
+    "game_events": [5426],
     "start_window": "background",
     "windows": {
       "background": {

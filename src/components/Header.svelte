@@ -15,17 +15,20 @@
 </script>
 
 <header
-  class="app-header"
+  class="app-header draggable"
   bind:this={header}
   on:pointermove={() => activeWindow?.dragMove(header)}
 >
   <div>
     <img src="/img/header_icon.svg" alt="overwolf icon" />
-    <h1 class="app-header-text">Overwolf Svelte Sample App</h1>
+    {#if $currentWindow?.name === WINDOW_NAMES.desktop}
+      <h1 class="app-header-text">Overwolf-Svelte Sample App</h1>
+    {/if}
   </div>
-  {#if $currentWindow?.name === WINDOW_NAMES.inGame}
-    <span class="app-header-text">Hotkey: {hotkeyText}</span>
-  {/if}
+  <span class="app-header-text hotkey-text"
+    >Hotkey:
+    <span>{hotkeyText}</span>
+  </span>
   <div class="window-controls-group">
     <button
       class="icon window-control window-control-social discord"
@@ -36,25 +39,27 @@
       class="icon window-control window-control-settings"
       on:click={() => (window.location.href = "overwolf://settings")}
     />
-    <button
-      class="window-control window-control-minimize"
-      on:click={() => activeWindow?.minimize()}
-    />
-    {#if !windowMaximized}
+    {#if $currentWindow?.name === WINDOW_NAMES.desktop}
       <button
-        class="window-control window-control-maximize"
-        on:click={windowMinMax}
+        class="window-control window-control-minimize"
+        on:click={() => activeWindow?.minimize()}
       />
-    {:else}
+      {#if !windowMaximized}
+        <button
+          class="window-control window-control-maximize"
+          on:click={windowMinMax}
+        />
+      {:else}
+        <button
+          class="window-control window-control-restore"
+          on:click={windowMinMax}
+        />
+      {/if}
       <button
-        class="window-control window-control-restore"
-        on:click={windowMinMax}
+        class="window-control window-control-close"
+        on:click={() => activeWindow?.close()}
       />
     {/if}
-    <button
-      class="window-control window-control-close"
-      on:click={() => activeWindow?.close()}
-    />
   </div>
 </header>
 
@@ -90,7 +95,7 @@
     margin: 0 auto;
   }
 
-  .app-header .hotkey-text kbd {
+  .app-header .hotkey-text span {
     color: #fff;
     font-weight: bold;
   }
@@ -107,7 +112,6 @@
   .window-controls-group {
     display: flex;
     z-index: 1001;
-    /* margin-left: auto; */
   }
 
   .window-controls-group > * {
@@ -173,41 +177,6 @@
   .window-control-close:hover:before,
   .window-control-close:active:before {
     background-color: #dedede;
-  }
-
-  .tooltip {
-    visibility: hidden;
-    position: absolute;
-    margin-top: -3px;
-    width: 200px;
-    right: 0px;
-    background: #464646;
-    padding: 30px 5px;
-    line-height: 20px;
-    font-style: normal;
-    font-weight: normal;
-    font-size: 14px;
-    color: #d5d5d5;
-  }
-
-  .tooltip a {
-    font-style: normal;
-    font-weight: normal;
-    font-size: 14px;
-    color: #d5d5d5;
-  }
-
-  .tooltip hr {
-    border-color: #272727;
-    border-width: 0.5px;
-  }
-
-  .tooltip a:visited {
-    color: #d5d5d5;
-  }
-
-  .support:hover .tooltip {
-    visibility: visible;
   }
 
   .discord {
